@@ -43,3 +43,12 @@ INSERT INTO products
 (product_detail, starting_price, bid_increment, approval, note, warehouse_id, supplier_id)
 VALUES
 ('สินค้า A รุ่นใหม่', 1000.00, 50.00, 1, 'สินค้าพร้อมส่ง', 1, 1);
+
+#ลบ table ที่ละบุไว้ออก
+DELETE FROM products;
+
+
+#ลบแค่ ข้อมูลใน table
+TRUNCATE TABLE products;
+
+
