@@ -1,0 +1,45 @@
+#สร้าง database
+CREATE DATABASE my_api_db;
+
+#ดู database ทั่งหมด
+SHOW DATABASES;
+
+# เลือก database 
+USE my_api_db;
+
+#แสดง table
+SHOW TABLES;
+
+#แสดง รายละเอียดของ table นั้นๆ
+DESCRIBE products;
+
+#ดูข้อมูลใน table
+SELECT * FROM products;
+
+#สร้่าง table  และ กำหนดให้ warehouse_id และ supplier_id เป็น FK ของ table product
+CREATE TABLE products (
+    product_id INT AUTO_INCREMENT PRIMARY KEY,
+    product_detail TEXT NOT NULL,
+    starting_price DECIMAL(10,2) NOT NULL,
+    bid_increment DECIMAL(10,2) NOT NULL,
+    approval TINYINT(1) DEFAULT 0,
+    note VARCHAR(255),
+    warehouse_id INT,
+    supplier_id INT,
+
+    CONSTRAINT fk_warehouse 
+        FOREIGN KEY (warehouse_id) REFERENCES warehouse(warehouse_id)
+        ON DELETE SET NULL ON UPDATE CASCADE,
+
+    CONSTRAINT fk_supplier 
+        FOREIGN KEY (supplier_id) REFERENCES supplier(supplier_id)
+        ON DELETE SET NULL ON UPDATE CASCADE
+);
+
+
+	
+#insert ข้อมูลเข้า table
+INSERT INTO products
+(product_detail, starting_price, bid_increment, approval, note, warehouse_id, supplier_id)
+VALUES
+('สินค้า A รุ่นใหม่', 1000.00, 50.00, 1, 'สินค้าพร้อมส่ง', 1, 1);
