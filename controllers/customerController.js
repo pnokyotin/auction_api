@@ -1,3 +1,4 @@
+// controllers/customerController.js
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { Customer } from "../models/Customer.js";

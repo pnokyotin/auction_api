@@ -79,4 +79,54 @@ router.post("/", upload.single("image"), async (req, res) => {
   }
 });
 
+
+// PUT /api/products/:productId/warehouse → อัปเดต warehouse ของสินค้า
+router.put("/:productId/warehouse", async (req, res) => {
+  const { productId } = req.params;
+  const { warehouse_id } = req.body;
+
+  try {
+    // แปลง undefined/null → 0 ถ้าไม่ส่งค่า
+    const warehouseIdValue = warehouse_id ? Number(warehouse_id) : 0;
+
+    const [result] = await db.execute(
+      `UPDATE products SET warehouse_id = ? WHERE product_id = ?`,
+      [warehouseIdValue, productId]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ success: false, message: "ไม่พบสินค้านี้" });
+    }
+
+    res.json({ success: true, product_id: productId, warehouse_id: warehouseIdValue });
+  } catch (err) {
+    console.error("UPDATE WAREHOUSE ERROR:", err);
+    res.status(500).json({ success: false, message: "เกิดข้อผิดพลาด", error: err.message });
+  }
+});
+
+router.put("/:productId/room", async (req, res) => {
+  const { productId } = req.params;
+  const { room_id } = req.body;
+
+  try {
+    const roomIdValue = room_id ? Number(room_id) : null;
+
+    const [result] = await db.execute(
+      `UPDATE products SET room_id = ? WHERE product_id = ?`,
+      [roomIdValue, productId]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ success: false, message: "ไม่พบสินค้านี้" });
+    }
+
+    res.json({ success: true, product_id: productId, room_id: roomIdValue });
+  } catch (err) {
+    console.error("UPDATE ROOM ERROR:", err);
+    res.status(500).json({ success: false, message: "เกิดข้อผิดพลาด", error: err.message });
+  }
+});
+
+
 export default router;

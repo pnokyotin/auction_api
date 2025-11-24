@@ -1,3 +1,4 @@
+// routes/customer.js
 import express from "express";
 import { registerCustomer, loginCustomer } from "../controllers/customerController.js";
 

@@ -1,3 +1,4 @@
+// models/Product.js
 import { db } from "../config/db.js";
 
 export const Product = {
@@ -10,6 +11,7 @@ export const Product = {
       image_url: p.image_url?.replace(/^http:\/\/localhost:5000\//, "") || null
     }));
   },
+
   create: async (body, file) => {
     const {
       product_detail, starting_price, bid_increment, approval,
@@ -35,5 +37,22 @@ export const Product = {
        productValues
     );
     return result.insertId;
+  },
+
+  updateWarehouse: async (productId, warehouse_id) => {
+    const [result] = await db.execute(
+      `UPDATE products SET warehouse_id = ? WHERE product_id = ?`,
+      [warehouse_id ?? 0, productId]
+    );
+    return result;
+  },
+
+  // เพิ่มฟังก์ชันอัปเดต room และ warehouse พร้อมกัน
+  updateRoomAndWarehouse: async (productId, room_id, warehouse_id) => {
+    const [result] = await db.execute(
+      `UPDATE products SET room_id = ?, warehouse_id = ? WHERE product_id = ?`,
+      [room_id ?? null, warehouse_id ?? 0, productId]
+    );
+    return result;
   }
 };
