@@ -5,7 +5,7 @@ export const Product = {
   // ดึงสินค้าทั้งหมด
   getAll: async () => {
     const [rows] = await db.execute(
-      `SELECT product_id, product_detail, starting_price, bid_increment, approval,
+      `SELECT product_id, product_detail, tracking_number, starting_price, bid_increment, approval,
               note, room_id, warehouse_id, user_id, image_url
        FROM products
        ORDER BY product_id DESC`
@@ -19,12 +19,21 @@ export const Product = {
   // เพิ่มสินค้า
   create: async (body, file) => {
     const {
-      product_detail, starting_price, bid_increment, approval,
-      note, room_id, warehouse_id, user_id
+      product_detail,
+      tracking_number,
+      starting_price,
+      bid_increment,
+      approval,
+      note,
+      room_id,
+      warehouse_id,
+      user_id
     } = body;
 
     const productValues = [
+      product_name ?? null,
       product_detail ?? null,
+      tracking_number ?? null,
       starting_price ? Number(starting_price) : null,
       bid_increment ? Number(bid_increment) : null,
       approval ? Number(approval) : 0,
@@ -37,9 +46,9 @@ export const Product = {
 
     const [result] = await db.execute(
       `INSERT INTO products 
-       (product_detail, starting_price, bid_increment, approval, note, room_id, warehouse_id, user_id, image_url)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-       productValues
+      (product_id, product_name, product_detail, tracking_number, starting_price, bid_increment, approval, note, room_id, warehouse_id, user_id, image_url)
+      VALUES (NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      productValues
     );
     return result.insertId;
   },
