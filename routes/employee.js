@@ -1,3 +1,4 @@
+// routes/employee.js
 import express from "express";
 import { loginEmployee } from "../controllers/employeeController.js";
 

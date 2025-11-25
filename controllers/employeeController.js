@@ -1,3 +1,4 @@
+// controllers/employeeController.js
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { Employee } from "../models/Employee.js";

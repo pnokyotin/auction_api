@@ -1,3 +1,4 @@
+// models/Employee.js
 import { db } from "../config/db.js";
 
 export const Employee = {

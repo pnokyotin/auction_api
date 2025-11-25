@@ -2,9 +2,13 @@
 import { db } from "../config/db.js";
 
 export const Product = {
+  // ดึงสินค้าทั้งหมด
   getAll: async () => {
     const [rows] = await db.execute(
-      `SELECT * FROM products ORDER BY product_id DESC`
+      `SELECT product_id, product_detail, starting_price, bid_increment, approval,
+              note, room_id, warehouse_id, user_id, image_url
+       FROM products
+       ORDER BY product_id DESC`
     );
     return rows.map(p => ({
       ...p,
@@ -12,10 +16,11 @@ export const Product = {
     }));
   },
 
+  // เพิ่มสินค้า
   create: async (body, file) => {
     const {
       product_detail, starting_price, bid_increment, approval,
-      note, room_id, warehouse_id, supplier_id
+      note, room_id, warehouse_id, user_id
     } = body;
 
     const productValues = [
@@ -26,19 +31,20 @@ export const Product = {
       note ?? null,
       room_id ? Number(room_id) : null,
       warehouse_id ? Number(warehouse_id) : null,
-      supplier_id ? Number(supplier_id) : null,
+      user_id ? Number(user_id) : null,
       file ? `images/${file.filename}` : null,
     ];
 
     const [result] = await db.execute(
       `INSERT INTO products 
-       (product_detail, starting_price, bid_increment, approval, note, room_id, warehouse_id, supplier_id, image_url)
+       (product_detail, starting_price, bid_increment, approval, note, room_id, warehouse_id, user_id, image_url)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
        productValues
     );
     return result.insertId;
   },
 
+  // อัปเดต warehouse ของสินค้า
   updateWarehouse: async (productId, warehouse_id) => {
     const [result] = await db.execute(
       `UPDATE products SET warehouse_id = ? WHERE product_id = ?`,
@@ -47,7 +53,16 @@ export const Product = {
     return result;
   },
 
-  // เพิ่มฟังก์ชันอัปเดต room และ warehouse พร้อมกัน
+  // อัปเดต room ของสินค้า
+  updateRoom: async (productId, room_id) => {
+    const [result] = await db.execute(
+      `UPDATE products SET room_id = ? WHERE product_id = ?`,
+      [room_id ?? null, productId]
+    );
+    return result;
+  },
+
+  // อัปเดต room และ warehouse พร้อมกัน
   updateRoomAndWarehouse: async (productId, room_id, warehouse_id) => {
     const [result] = await db.execute(
       `UPDATE products SET room_id = ?, warehouse_id = ? WHERE product_id = ?`,

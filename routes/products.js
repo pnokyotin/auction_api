@@ -18,7 +18,7 @@ router.get("/", async (req, res) => {
   try {
     const [rows] = await db.execute(
       `SELECT product_id, product_detail, starting_price, bid_increment, approval,
-              note, room_id, warehouse_id, supplier_id, image_url
+              note, room_id, warehouse_id, user_id, image_url
        FROM products
        ORDER BY product_id DESC`
     );
@@ -37,9 +37,6 @@ router.get("/", async (req, res) => {
 
 // POST /api/products → เพิ่มสินค้า
 router.post("/", upload.single("image"), async (req, res) => {
-  console.log("BODY:", req.body);
-  console.log("FILE:", req.file);
-
   try {
     const {
       product_detail,
@@ -49,10 +46,11 @@ router.post("/", upload.single("image"), async (req, res) => {
       note,
       room_id,
       warehouse_id,
-      supplier_id,
+      user_id,
     } = req.body;
 
-    // แปลง undefined/empty → null และตัวเลข
+    if (!user_id) return res.status(400).json({ success: false, message: "user_id is required" });
+
     const productValues = [
       product_detail ?? null,
       starting_price ? Number(starting_price) : null,
@@ -61,34 +59,32 @@ router.post("/", upload.single("image"), async (req, res) => {
       note ?? null,
       room_id ? Number(room_id) : null,
       warehouse_id ? Number(warehouse_id) : null,
-      supplier_id ? Number(supplier_id) : null,
+      Number(user_id), // ต้องมีค่า
       req.file ? `images/${req.file.filename}` : null,
     ];
 
     const [result] = await db.execute(
-      `INSERT INTO products 
-        (product_detail, starting_price, bid_increment, approval, note, room_id, warehouse_id, supplier_id, image_url)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-       productValues
+      `INSERT INTO products
+      (product_detail, starting_price, bid_increment, approval, note, room_id, warehouse_id, user_id, image_url)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      productValues
     );
 
-    res.status(201).json({ message: "เพิ่มสินค้าเรียบร้อย", product_id: result.insertId });
+    res.status(201).json({ success: true, product_id: result.insertId });
   } catch (err) {
     console.error("PRODUCT POST ERROR:", err);
-    res.status(500).json({ message: "เกิดข้อผิดพลาด", error: err.message });
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 
 
-// PUT /api/products/:productId/warehouse → อัปเดต warehouse ของสินค้า
+// PUT /api/products/:productId/warehouse → อัปเดต warehouse
 router.put("/:productId/warehouse", async (req, res) => {
   const { productId } = req.params;
   const { warehouse_id } = req.body;
 
   try {
-    // แปลง undefined/null → 0 ถ้าไม่ส่งค่า
     const warehouseIdValue = warehouse_id ? Number(warehouse_id) : 0;
-
     const [result] = await db.execute(
       `UPDATE products SET warehouse_id = ? WHERE product_id = ?`,
       [warehouseIdValue, productId]
@@ -105,13 +101,13 @@ router.put("/:productId/warehouse", async (req, res) => {
   }
 });
 
+// PUT /api/products/:productId/room → อัปเดต room
 router.put("/:productId/room", async (req, res) => {
   const { productId } = req.params;
   const { room_id } = req.body;
 
   try {
     const roomIdValue = room_id ? Number(room_id) : null;
-
     const [result] = await db.execute(
       `UPDATE products SET room_id = ? WHERE product_id = ?`,
       [roomIdValue, productId]
@@ -128,5 +124,41 @@ router.put("/:productId/room", async (req, res) => {
   }
 });
 
+
+// PUT /api/products/approve/:productId → อัปเดต approval
+router.put("/approve/:productId", async (req, res) => {
+  const { productId } = req.params;
+  const { approval } = req.body;
+
+  if (approval === undefined) {
+    return res.status(400).json({ success: false, message: "approval is required" });
+  }
+
+  try {
+    const [result] = await db.execute(
+      `UPDATE products SET approval = ? WHERE product_id = ?`,
+      [Number(approval), Number(productId)]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ success: false, message: "ไม่พบสินค้านี้" });
+    }
+
+    // ดึงข้อมูลสินค้าที่อัปเดตกลับมา
+    const [rows] = await db.execute(
+      `SELECT * FROM products WHERE product_id = ?`,
+      [Number(productId)]
+    );
+
+    res.json({
+      success: true,
+      message: `Product ${productId} approval updated to ${approval}`,
+      product: rows[0]
+    });
+  } catch (err) {
+    console.error("APPROVE PRODUCT ERROR:", err);
+    res.status(500).json({ success: false, message: "เกิดข้อผิดพลาด", error: err.message });
+  }
+});
 
 export default router;
